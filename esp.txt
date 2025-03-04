@@ -109,7 +109,8 @@ local function createESP(player)
                         esp.healthBar.Visible = true
                     end
 
-                    -- Tracer line
+                    -- Tracer line (360 degrees to target)
+                    local targetPosition = rootPart.Position
                     esp.tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
                     esp.tracer.To = Vector2.new(vector.X, vector.Y + 50)
                     esp.tracer.Visible = true
