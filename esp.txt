@@ -78,10 +78,10 @@ local function createESP(player)
 
                     -- Box ESP with constant size regardless of distance/angle
                     local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
-                    local constantSize = 1000 / distance -- Adjust this value to change box size
-                    local boxWidth = constantSize * 0.8 -- Width relative to size
-                    local boxHeight = constantSize * 1.7 -- Height relative to size
-                    local boxPosition = Vector2.new(torsoPos.X - boxWidth / 2, torsoPos.Y - boxHeight / 2 + 10)
+                    local constantSize = 1000 / distance -- Base size scalar
+                    local boxWidth = constantSize * 1.0 -- Increased width (from 0.8 to 1.0)
+                    local boxHeight = constantSize * 2.0 -- Increased height (from 1.7 to 2.0)
+                    local boxPosition = Vector2.new(torsoPos.X - boxWidth / 2, torsoPos.Y - boxHeight / 2 + 20) -- Moved down (from +10 to +20)
 
                     esp.box.Size = Vector2.new(boxWidth, boxHeight)
                     esp.box.Position = boxPosition
