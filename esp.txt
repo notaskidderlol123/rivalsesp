@@ -165,15 +165,61 @@ local function DrawESP(plr)
                             skeleton["Head"].To = getBonePosition("UpperTorso")
                             skeleton["Head"].Visible = true
                         end
-
-                        -- Example of bone connections (continue for the rest of the bones)
                         if getBonePosition("UpperTorso") and getBonePosition("LowerTorso") then
                             skeleton["UpperTorso"].From = getBonePosition("UpperTorso")
                             skeleton["UpperTorso"].To = getBonePosition("LowerTorso")
                             skeleton["UpperTorso"].Visible = true
                         end
-
-                        -- You can continue adding bone connections for arms, legs, and feet
+                        if getBonePosition("LowerTorso") and getBonePosition("LeftUpperLeg") then
+                            skeleton["LowerTorso"].From = getBonePosition("LowerTorso")
+                            skeleton["LowerTorso"].To = getBonePosition("LeftUpperLeg")
+                            skeleton["LowerTorso"].Visible = true
+                        end
+                        if getBonePosition("LowerTorso") and getBonePosition("RightUpperLeg") then
+                            skeleton["LowerTorso"].From = getBonePosition("LowerTorso")
+                            skeleton["LowerTorso"].To = getBonePosition("RightUpperLeg")
+                            skeleton["LowerTorso"].Visible = true
+                        end
+                        if getBonePosition("LeftUpperLeg") and getBonePosition("LeftLowerLeg") then
+                            skeleton["LeftUpperLeg"].From = getBonePosition("LeftUpperLeg")
+                            skeleton["LeftUpperLeg"].To = getBonePosition("LeftLowerLeg")
+                            skeleton["LeftUpperLeg"].Visible = true
+                        end
+                        if getBonePosition("LeftLowerLeg") and getBonePosition("LeftFoot") then
+                            skeleton["LeftLowerLeg"].From = getBonePosition("LeftLowerLeg")
+                            skeleton["LeftLowerLeg"].To = getBonePosition("LeftFoot")
+                            skeleton["LeftLowerLeg"].Visible = true
+                        end
+                        if getBonePosition("RightUpperLeg") and getBonePosition("RightLowerLeg") then
+                            skeleton["RightUpperLeg"].From = getBonePosition("RightUpperLeg")
+                            skeleton["RightUpperLeg"].To = getBonePosition("RightLowerLeg")
+                            skeleton["RightUpperLeg"].Visible = true
+                        end
+                        if getBonePosition("RightLowerLeg") and getBonePosition("RightFoot") then
+                            skeleton["RightLowerLeg"].From = getBonePosition("RightLowerLeg")
+                            skeleton["RightLowerLeg"].To = getBonePosition("RightFoot")
+                            skeleton["RightLowerLeg"].Visible = true
+                        end
+                        if getBonePosition("LeftUpperArm") and getBonePosition("LeftLowerArm") then
+                            skeleton["LeftUpperArm"].From = getBonePosition("LeftUpperArm")
+                            skeleton["LeftUpperArm"].To = getBonePosition("LeftLowerArm")
+                            skeleton["LeftUpperArm"].Visible = true
+                        end
+                        if getBonePosition("LeftLowerArm") and getBonePosition("LeftHand") then
+                            skeleton["LeftLowerArm"].From = getBonePosition("LeftLowerArm")
+                            skeleton["LeftLowerArm"].To = getBonePosition("LeftHand")
+                            skeleton["LeftLowerArm"].Visible = true
+                        end
+                        if getBonePosition("RightUpperArm") and getBonePosition("RightLowerArm") then
+                            skeleton["RightUpperArm"].From = getBonePosition("RightUpperArm")
+                            skeleton["RightUpperArm"].To = getBonePosition("RightLowerArm")
+                            skeleton["RightUpperArm"].Visible = true
+                        end
+                        if getBonePosition("RightLowerArm") and getBonePosition("RightHand") then
+                            skeleton["RightLowerArm"].From = getBonePosition("RightLowerArm")
+                            skeleton["RightLowerArm"].To = getBonePosition("RightHand")
+                            skeleton["RightLowerArm"].Visible = true
+                        end
                     else 
                         Box.Visible = false
                         name.Visible = false
