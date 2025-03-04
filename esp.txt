@@ -31,7 +31,7 @@ local function createESP(player)
 
     -- Health bar (Increased size)
     esp.healthBar = Drawing.new("Line")
-    esp.healthBar.Thickness = 8 -- Increased from 5 to 8
+    esp.healthBar.Thickness = 12 -- Increased from 8 to 12
     esp.healthBar.Visible = false
 
     -- Tracer line
@@ -76,10 +76,10 @@ local function createESP(player)
                     local headPos = camera:WorldToViewportPoint(head.Position)
                     local torsoPos = camera:WorldToViewportPoint(torso.Position)
 
-                    -- Box ESP spanning from feet to head, staying on the player, made taller and wider
+                    -- Box ESP spanning from feet to head, made taller and wider
                     local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position) -- Using LowerTorso as "feet"
-                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) * 1.5 -- Increased height by 50% (taller)
-                    local boxWidth = boxHeight * 1.0 -- Increased width to match height proportion (wider)
+                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) * 2.0 -- Increased height by 100% (taller)
+                    local boxWidth = boxHeight * 1.2 -- Increased width to match height proportion (wider)
                     local boxPosition = Vector2.new(
                         torsoPos.X - boxWidth / 2,  -- Center horizontally on torso
                         lowerTorsoPos.Y - (boxHeight * 0.1) -- Start slightly below feet, adjusted for taller height
