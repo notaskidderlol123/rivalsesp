@@ -1,0 +1,70 @@
+ -- Health bar
+                    if humanoid then
+                        local healthPercent = humanoid.Health / humanoid.MaxHealth
+                        esp.healthBar.From = Vector2.new(boxPosition.X - 8, boxPosition.Y + boxHeight)
+                        esp.healthBar.To = Vector2.new(boxPosition.X - 8, boxPosition.Y + boxHeight * (1 - healthPercent))
+                        esp.healthBar.Color = Color3.fromRGB(0, 255, 0)
+                        esp.healthBar.Visible = true
+                    end
+
+                    -- Tracer line
+                    esp.tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+                    esp.tracer.To = Vector2.new(vector.X, vector.Y + 50)
+                    esp.tracer.Visible = true
+
+                    -- Skeleton/Bone ESP
+                    local function drawBone(from, to)
+                        if player.Character:FindFirstChild(from) and player.Character:FindFirstChild(to) then
+                            local fromPos = camera:WorldToViewportPoint(player.Character[from].Position)
+                            local toPos = camera:WorldToViewportPoint(player.Character[to].Position)
+                            esp.skeleton[{from, to}].From = Vector2.new(fromPos.X, fromPos.Y)
+                            esp.skeleton[{from, to}].To = Vector2.new(toPos.X, toPos.Y)
+                            esp.skeleton[{from, to}].Visible = true
+                        else
+                            esp.skeleton[{from, to}].Visible = false
+                        end
+                    end
+
+                    for _, bone in ipairs(bones) do
+                        drawBone(bone[1], bone[2])
+                    end
+
+                end
+            else
+                esp.box.Visible = false
+                esp.headCircle.Visible = false
+                esp.name.Visible = false
+                esp.distance.Visible = false
+                esp.healthBar.Visible = false
+                esp.tracer.Visible = false
+                for _, bone in pairs(esp.skeleton) do
+                    bone.Visible = false
+                end
+            end
+        else
+            esp.box.Visible = false
+            esp.headCircle.Visible = false
+            esp.name.Visible = false
+            esp.distance.Visible = false
+            esp.healthBar.Visible = false
+            esp.tracer.Visible = false
+            for _, bone in pairs(esp.skeleton) do
+                bone.Visible = false
+            end
+        end
+    end
+
+    runService.RenderStepped:Connect(updateESP)
+end
+
+-- Add ESP to all players
+for _, player in pairs(players:GetPlayers()) do
+    if player ~= localPlayer then
+        createESP(player)
+    end
+end
+
+players.PlayerAdded:Connect(function(player)
+    wait(1)
+    createESP(player)
+end)
