@@ -8,12 +8,12 @@ local function createESP(player)
     
     local esp = {}
 
-    -- 2D Box ESP
-    esp.box2D = Drawing.new("Square")
-    esp.box2D.Color = Color3.fromRGB(255, 255, 255) -- White box
-    esp.box2D.Thickness = 1
-    esp.box2D.Filled = false
-    esp.box2D.Visible = false
+    -- Box ESP (3D)
+    esp.box = Drawing.new("Square")
+    esp.box.Color = Color3.fromRGB(255, 255, 255) -- White box
+    esp.box.Thickness = 1
+    esp.box.Filled = false
+    esp.box.Visible = false
     
     -- Name
     esp.name = Drawing.new("Text")
@@ -29,9 +29,9 @@ local function createESP(player)
     esp.distance.Outline = true
     esp.distance.Visible = false
 
-    -- Health bar (Increased size)
+    -- Health bar
     esp.healthBar = Drawing.new("Line")
-    esp.healthBar.Thickness = 12 -- Increased from 8 to 12
+    esp.healthBar.Thickness = 12 -- Adjusted thickness
     esp.healthBar.Visible = false
 
     -- Tracer line
@@ -76,7 +76,7 @@ local function createESP(player)
                     local headPos = camera:WorldToViewportPoint(head.Position)
                     local torsoPos = camera:WorldToViewportPoint(torso.Position)
 
-                    -- 2D Box ESP
+                    -- Box ESP spanning from feet to head, made taller and wider
                     local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position) -- Using LowerTorso as "feet"
                     local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) * 2.0 -- Increased height by 100% (taller)
                     local boxWidth = boxHeight * 1.2 -- Increased width to match height proportion (wider)
@@ -85,9 +85,9 @@ local function createESP(player)
                         lowerTorsoPos.Y - (boxHeight * 0.1) -- Start slightly below feet, adjusted for taller height
                     )
 
-                    esp.box2D.Size = Vector2.new(boxWidth, boxHeight)
-                    esp.box2D.Position = boxPosition
-                    esp.box2D.Visible = true
+                    esp.box.Size = Vector2.new(boxWidth, boxHeight)
+                    esp.box.Position = boxPosition
+                    esp.box.Visible = true
 
                     -- Name
                     esp.name.Position = Vector2.new(vector.X, vector.Y - 60)
@@ -100,7 +100,7 @@ local function createESP(player)
                     esp.distance.Text = tostring(math.floor(playerDistance)) .. "m"
                     esp.distance.Visible = true
 
-                    -- Health bar (Increased size and adjusted position)
+                    -- Health bar
                     if humanoid then
                         local healthPercent = humanoid.Health / humanoid.MaxHealth
                         esp.healthBar.From = Vector2.new(boxPosition.X - 12, boxPosition.Y + boxHeight) -- Shifted further left
@@ -141,61 +141,9 @@ local function createESP(player)
                     drawBone("LowerTorso", "RightUpperLeg")
                     drawBone("RightUpperLeg", "RightLowerLeg")
                     drawBone("RightLowerLeg", "RightFoot")
-
-                    -- 3D Box ESP (Simple 3D Box Representation)
-                    local function draw3DBox()
-                        -- Define vertices (Corners of the box)
-                        local size = Vector3.new(boxWidth, boxHeight, boxWidth)
-                        local offset = rootPart.Position - Vector3.new(0, size.Y / 2, 0)
-
-                        -- Calculate corners of the 3D box
-                        local frontTopLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, size.Y/2, size.Z/2))
-                        local frontTopRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, size.Y/2, size.Z/2))
-                        local frontBottomLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, -size.Y/2, size.Z/2))
-                        local frontBottomRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, -size.Y/2, size.Z/2))
-                        local backTopLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, size.Y/2, -size.Z/2))
-                        local backTopRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, size.Y/2, -size.Z/2))
-                        local backBottomLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, -size.Y/2, -size.Z/2))
-                        local backBottomRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, -size.Y/2, -size.Z/2))
-
-                        -- Draw lines connecting corners to form the box
-                        local function drawLine(fromPos, toPos)
-                            local line = Drawing.new("Line")
-                            line.Color = Color3.fromRGB(255, 255, 255)
-                            line.Thickness = 2
-                            line.From = fromPos
-                            line.To = toPos
-                            line.Visible = true
-                            return line
-                        end
-
-                        -- Draw front and back faces of the 3D box
-                        local frontLines = {
-                            drawLine(frontTopLeft, frontTopRight),
-                            drawLine(frontTopRight, frontBottomRight),
-                            drawLine(frontBottomRight, frontBottomLeft),
-                            drawLine(frontBottomLeft, frontTopLeft)
-                        }
-
-                        local backLines = {
-                            drawLine(backTopLeft, backTopRight),
-                            drawLine(backTopRight, backBottomRight),
-                            drawLine(backBottomRight, backBottomLeft),
-                            drawLine(backBottomLeft, backTopLeft)
-                        }
-
-                        -- Connect front to back
-                        drawLine(frontTopLeft, backTopLeft)
-                        drawLine(frontTopRight, backTopRight)
-                        drawLine(frontBottomLeft, backBottomLeft)
-                        drawLine(frontBottomRight, backBottomRight)
-                    end
-
-                    draw3DBox()
-
                 end
             else
-                esp.box2D.Visible = false
+                esp.box.Visible = false
                 esp.name.Visible = false
                 esp.distance.Visible = false
                 esp.healthBar.Visible = false
@@ -205,7 +153,7 @@ local function createESP(player)
                 end
             end
         else
-            esp.box2D.Visible = false
+            esp.box.Visible = false
             esp.name.Visible = false
             esp.distance.Visible = false
             esp.healthBar.Visible = false
