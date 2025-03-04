@@ -76,10 +76,10 @@ local function createESP(player)
                     local headPos = camera:WorldToViewportPoint(head.Position)
                     local torsoPos = camera:WorldToViewportPoint(torso.Position)
 
-                    -- Box ESP spanning from feet to head, staying on the player, wider and taller
+                    -- Box ESP spanning from feet to head, staying on the player, made taller and wider
                     local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position) -- Using LowerTorso as "feet"
-                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) * 1.2 -- Increased height by 20% (taller)
-                    local boxWidth = boxHeight * 0.8 -- Increased width (from 0.6 to 0.8, wider)
+                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) * 1.5 -- Increased height by 50% (taller)
+                    local boxWidth = boxHeight * 1.0 -- Increased width to match height proportion (wider)
                     local boxPosition = Vector2.new(
                         torsoPos.X - boxWidth / 2,  -- Center horizontally on torso
                         lowerTorsoPos.Y - (boxHeight * 0.1) -- Start slightly below feet, adjusted for taller height
