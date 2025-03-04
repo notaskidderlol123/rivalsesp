@@ -1,239 +1,280 @@
-local settings = {
-    NameColor = Color3.fromRGB(255, 0, 0),
-    BoxColor = Color3.fromRGB(255, 0, 0),
-    BoneColor = Color3.fromRGB(0, 255, 0),
-    LineThickness = 2,
-    Transparency = 1,
-    DistanceColor = Color3.fromRGB(255, 255, 255),
-    DistanceSize = 15,
-    AutoScale = true
-}
+local camera = game.Workspace.CurrentCamera
+local players = game:GetService("Players")
+local localPlayer = players.LocalPlayer
+local runService = game:GetService("RunService")
 
-local Space = game:GetService("Workspace")
-local Player = game:GetService("Players").LocalPlayer
-local Camera = Space.CurrentCamera
+-- New Box ESP function
+local function DrawESP(plr)
+    local Box = Drawing.new("Quad")
+    Box.Visible = false
+    Box.PointA = Vector2.new(0, 0)
+    Box.PointB = Vector2.new(0, 0)
+    Box.PointC = Vector2.new(0, 0)
+    Box.PointD = Vector2.new(0, 0)
+    Box.Color = Color3.fromRGB(255, 255, 255)
+    Box.Thickness = 1
+    Box.Transparency = 1
 
--- Function to create lines
-local function NewLine(color, thickness)
-    local line = Drawing.new("Line")
-    line.Visible = false
-    line.From = Vector2.new(0, 0)
-    line.To = Vector2.new(0, 0)
-    line.Color = color
-    line.Thickness = thickness
-    line.Transparency = settings.Transparency
-    return line
-end
+    -- Name
+    local name = Drawing.new("Text")
+    name.Size = 18
+    name.Color = Color3.fromRGB(255, 255, 255)
+    name.Outline = true
+    name.Visible = false
 
--- Function to create text
-local function NewText(color, size, transparency)
-    local text = Drawing.new("Text")
-    text.Visible = false
-    text.Text = ""
-    text.Position = Vector2.new(0, 0)
-    text.Color = color
-    text.Size = size
-    text.Center = true
-    text.Transparency = transparency
-    return text
-end
+    -- Distance
+    local distance = Drawing.new("Text")
+    distance.Size = 16
+    distance.Color = Color3.fromRGB(255, 255, 255)
+    distance.Outline = true
+    distance.Visible = false
 
--- Function to create a box (for the player)
-local function NewBox(color, thickness)
-    local box = Drawing.new("Line")
-    box.Visible = false
-    box.Color = color
-    box.Thickness = thickness
-    return box
-end
+    -- Health bar
+    local healthBar = Drawing.new("Line")
+    healthBar.Thickness = 3
+    healthBar.Visible = false
 
--- Function to set visibility of the lines
-local function Vis(lib, state)
-    for i, v in pairs(lib) do
-        v.Visible = state
-    end
-end
+    -- Tracer line
+    local tracer = Drawing.new("Line")
+    tracer.Color = Color3.fromRGB(0, 255, 0)
+    tracer.Thickness = 1
+    tracer.Visible = false
 
--- Function to draw bones
-local function DrawBones(plr)
-    repeat wait() until plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil
-    local Library = {}
+    -- Bone ESP
+    local bones = {
+        "Head", "UpperTorso", "LowerTorso",
+        "LeftUpperArm", "LeftLowerArm", "LeftHand",
+        "RightUpperArm", "RightLowerArm", "RightHand",
+        "LeftUpperLeg", "LeftLowerLeg", "LeftFoot",
+        "RightUpperLeg", "RightLowerLeg", "RightFoot"
+    }
 
-    -- Create bone connections
-    local function createBoneLines()
-        local lines = {}
-        local bonePairs = {
-            {"Head", "Torso"},
-            {"Torso", "LeftLeg"},
-            {"Torso", "RightLeg"},
-            {"Torso", "LeftArm"},
-            {"Torso", "RightArm"},
-            {"LeftLeg", "LeftFoot"},
-            {"RightLeg", "RightFoot"}
-        }
-
-        for _, pair in pairs(bonePairs) do
-            lines[pair[1] .. "-" .. pair[2]] = NewLine(settings.BoneColor, settings.LineThickness)
-        end
-
-        return lines
+    local skeleton = {}
+    for _, bone in pairs(bones) do
+        local line = Drawing.new("Line")
+        line.Color = Color3.fromRGB(255, 165, 0) -- Skeleton color (Orange)
+        line.Thickness = 2
+        line.Visible = false
+        skeleton[bone] = line
     end
 
-    local bones = createBoneLines()
-
-    -- Loop to update bone lines
-    local function Updater()
+    -- Function to update ESP and Bone ESP
+    local function Update()
         local c
-        c = game:GetService("RunService").RenderStepped:Connect(function()
-            if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 then
-                local Hum = plr.Character
-                local HumPos, vis = Camera:WorldToViewportPoint(Hum.HumanoidRootPart.Position)
-                if vis then
-                    for _, line in pairs(bones) do
-                        line.Visible = true
+        c = runService.RenderStepped:Connect(function()
+            if plr.Character ~= nil and plr.Character:FindFirstChildOfClass("Humanoid") ~= nil and plr.Character.PrimaryPart ~= nil and plr.Character:FindFirstChildOfClass("Humanoid").Health > 0 then
+                local pos, vis = camera:WorldToViewportPoint(plr.Character.PrimaryPart.Position)
+                if vis then 
+                    local points = {}
+                    local c = 0
+                    for _,v in pairs(plr.Character:GetChildren()) do
+                        if v:IsA("BasePart") then
+                            c = c + 1
+                            local p, vis = camera:WorldToViewportPoint(v.Position)
+                            if v == plr.Character.PrimaryPart then
+                                p, vis = camera:WorldToViewportPoint((v.CFrame * CFrame.new(0, 0, -v.Size.Z)).p)
+                            elseif v.Name == "Head" then
+                                p, vis = camera:WorldToViewportPoint((v.CFrame * CFrame.new(0, v.Size.Y/2, v.Size.Z/1.25)).p)
+                            elseif string.match(v.Name, "Left") then
+                                p, vis = camera:WorldToViewportPoint((v.CFrame * CFrame.new(-v.Size.X/2, 0, 0)).p)
+                            elseif string.match(v.Name, "Right") then
+                                p, vis = camera:WorldToViewportPoint((v.CFrame * CFrame.new(v.Size.X/2, 0, 0)).p)
+                            end
+                            points[c] = {p, vis}
+                        end
                     end
 
-                    -- Update the lines to connect the bones
-                    for _, pair in pairs(bones) do
-                        local fromPart = Hum:FindFirstChild(pair[1])
-                        local toPart = Hum:FindFirstChild(pair[2])
+                    local TopY = math.huge
+                    local DownY = -math.huge
+                    local LeftX = math.huge
+                    local RightX = -math.huge
 
-                        if fromPart and toPart then
-                            local fromPos, fromVis = Camera:WorldToViewportPoint(fromPart.Position)
-                            local toPos, toVis = Camera:WorldToViewportPoint(toPart.Position)
+                    local Left
+                    local Right
+                    local Top
+                    local Bottom
 
-                            if fromVis and toVis then
-                                pair.From = Vector2.new(fromPos.X, fromPos.Y)
-                                pair.To = Vector2.new(toPos.X, toPos.Y)
-                            else
-                                pair.Visible = false
+                    local closest = nil
+                    for _,v in pairs(points) do
+                        if v[2] == true then
+                            local p = v[1]
+                            if p.Y < TopY then
+                                Top = p
+                                TopY = p.Y
+                            end
+                            if p.Y > DownY then
+                                Bottom = p
+                                DownY = p.Y
+                            end
+                            if p.X > RightX then
+                                Right = p
+                                RightX = p.X
+                            end
+                            if p.X < LeftX then
+                                Left = p
+                                LeftX = p.X
                             end
                         end
                     end
-                else
-                    for _, line in pairs(bones) do
+
+                    if Left ~= nil and Right ~= nil and Top ~= nil and Bottom ~= nil then
+                        -- Update the Box
+                        Box.PointA = Vector2.new(Right.X, Top.Y)
+                        Box.PointB = Vector2.new(Left.X, Top.Y)
+                        Box.PointC = Vector2.new(Left.X, Bottom.Y)
+                        Box.PointD = Vector2.new(Right.X, Bottom.Y)
+                        Box.Visible = true
+
+                        -- Update Name
+                        name.Position = Vector2.new(Right.X, Top.Y - 20)
+                        name.Text = plr.Name
+                        name.Visible = true
+
+                        -- Update Distance
+                        local playerDistance = (localPlayer.Character.HumanoidRootPart.Position - plr.Character.HumanoidRootPart.Position).Magnitude
+                        distance.Position = Vector2.new(Right.X, Bottom.Y + 5)
+                        distance.Text = tostring(math.floor(playerDistance)) .. "m"
+                        distance.Visible = true
+
+                        -- Update Health Bar
+                        local humanoid = plr.Character:FindFirstChildOfClass("Humanoid")
+                        if humanoid then
+                            local healthPercent = humanoid.Health / humanoid.MaxHealth
+                            healthBar.From = Vector2.new(Right.X - 6, Top.Y)
+                            healthBar.To = Vector2.new(Right.X - 6, Top.Y + (Bottom.Y - Top.Y) * (1 - healthPercent))
+                            healthBar.Color = Color3.fromRGB(0, 255, 0)
+                            healthBar.Visible = true
+                        end
+
+                        -- Update Tracer
+                        tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
+                        tracer.To = Vector2.new(Right.X, Right.Y)
+                        tracer.Visible = true
+
+                        -- Update Bone ESP
+                        local function getBonePosition(boneName)
+                            local bonePart = plr.Character:FindFirstChild(boneName)
+                            if bonePart then
+                                return camera:WorldToViewportPoint(bonePart.Position)
+                            end
+                        end
+
+                        -- Connect bones with lines
+                        if getBonePosition("Head") and getBonePosition("UpperTorso") then
+                            skeleton["Head"].From = getBonePosition("Head")
+                            skeleton["Head"].To = getBonePosition("UpperTorso")
+                            skeleton["Head"].Visible = true
+                        end
+                        if getBonePosition("UpperTorso") and getBonePosition("LowerTorso") then
+                            skeleton["UpperTorso"].From = getBonePosition("UpperTorso")
+                            skeleton["UpperTorso"].To = getBonePosition("LowerTorso")
+                            skeleton["UpperTorso"].Visible = true
+                        end
+                        if getBonePosition("LowerTorso") and getBonePosition("LeftUpperLeg") then
+                            skeleton["LowerTorso"].From = getBonePosition("LowerTorso")
+                            skeleton["LowerTorso"].To = getBonePosition("LeftUpperLeg")
+                            skeleton["LowerTorso"].Visible = true
+                        end
+                        if getBonePosition("LowerTorso") and getBonePosition("RightUpperLeg") then
+                            skeleton["LowerTorso"].From = getBonePosition("LowerTorso")
+                            skeleton["LowerTorso"].To = getBonePosition("RightUpperLeg")
+                            skeleton["LowerTorso"].Visible = true
+                        end
+                        if getBonePosition("LeftUpperLeg") and getBonePosition("LeftLowerLeg") then
+                            skeleton["LeftUpperLeg"].From = getBonePosition("LeftUpperLeg")
+                            skeleton["LeftUpperLeg"].To = getBonePosition("LeftLowerLeg")
+                            skeleton["LeftUpperLeg"].Visible = true
+                        end
+                        if getBonePosition("LeftLowerLeg") and getBonePosition("LeftFoot") then
+                            skeleton["LeftLowerLeg"].From = getBonePosition("LeftLowerLeg")
+                            skeleton["LeftLowerLeg"].To = getBonePosition("LeftFoot")
+                            skeleton["LeftLowerLeg"].Visible = true
+                        end
+                        if getBonePosition("RightUpperLeg") and getBonePosition("RightLowerLeg") then
+                            skeleton["RightUpperLeg"].From = getBonePosition("RightUpperLeg")
+                            skeleton["RightUpperLeg"].To = getBonePosition("RightLowerLeg")
+                            skeleton["RightUpperLeg"].Visible = true
+                        end
+                        if getBonePosition("RightLowerLeg") and getBonePosition("RightFoot") then
+                            skeleton["RightLowerLeg"].From = getBonePosition("RightLowerLeg")
+                            skeleton["RightLowerLeg"].To = getBonePosition("RightFoot")
+                            skeleton["RightLowerLeg"].Visible = true
+                        end
+                        if getBonePosition("LeftUpperArm") and getBonePosition("LeftLowerArm") then
+                            skeleton["LeftUpperArm"].From = getBonePosition("LeftUpperArm")
+                            skeleton["LeftUpperArm"].To = getBonePosition("LeftLowerArm")
+                            skeleton["LeftUpperArm"].Visible = true
+                        end
+                        if getBonePosition("LeftLowerArm") and getBonePosition("LeftHand") then
+                            skeleton["LeftLowerArm"].From = getBonePosition("LeftLowerArm")
+                            skeleton["LeftLowerArm"].To = getBonePosition("LeftHand")
+                            skeleton["LeftLowerArm"].Visible = true
+                        end
+                        if getBonePosition("RightUpperArm") and getBonePosition("RightLowerArm") then
+                            skeleton["RightUpperArm"].From = getBonePosition("RightUpperArm")
+                            skeleton["RightUpperArm"].To = getBonePosition("RightLowerArm")
+                            skeleton["RightUpperArm"].Visible = true
+                        end
+                        if getBonePosition("RightLowerArm") and getBonePosition("RightHand") then
+                            skeleton["RightLowerArm"].From = getBonePosition("RightLowerArm")
+                            skeleton["RightLowerArm"].To = getBonePosition("RightHand")
+                            skeleton["RightLowerArm"].Visible = true
+                        end
+                    else 
+                        Box.Visible = false
+                        name.Visible = false
+                        distance.Visible = false
+                        healthBar.Visible = false
+                        tracer.Visible = false
+                        for _, line in pairs(skeleton) do
+                            line.Visible = false
+                        end
+                    end
+                else 
+                    Box.Visible = false
+                    name.Visible = false
+                    distance.Visible = false
+                    healthBar.Visible = false
+                    tracer.Visible = false
+                    for _, line in pairs(skeleton) do
                         line.Visible = false
                     end
                 end
             else
-                for _, line in pairs(bones) do
+                Box.Visible = false
+                name.Visible = false
+                distance.Visible = false
+                healthBar.Visible = false
+                tracer.Visible = false
+                for _, line in pairs(skeleton) do
                     line.Visible = false
                 end
-                if game:GetService("Players"):FindFirstChild(plr.Name) == nil then
+                if game.Players:FindFirstChild(plr.Name) == nil then
                     c:Disconnect()
                 end
             end
         end)
     end
-
-    coroutine.wrap(Updater)()
+    coroutine.wrap(Update)()
 end
 
--- Function to draw tracers
-local function DrawTracer(plr, tracerLine)
-    local HumanoidRootPart = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-    if HumanoidRootPart then
-        local position, onScreen = Camera:WorldToViewportPoint(HumanoidRootPart.Position)
-        if onScreen then
-            tracerLine.Visible = true
-            tracerLine.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 1.25)
-            tracerLine.To = Vector2.new(position.X, position.Y)
-        else
-            tracerLine.Visible = false
-        end
+-- Function to create all ESP features for a player
+local function createESP(player)
+    if player == localPlayer then return end
+    
+    -- Apply the new Box ESP and other features
+    DrawESP(player)
+end
+
+-- Apply ESP to all players
+for _, player in pairs(players:GetPlayers()) do
+    if player ~= localPlayer then
+        createESP(player)
     end
 end
 
--- Function to handle ESP for player names, distance, etc.
-local function HandleESP(plr)
-    repeat wait() until plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil
-
-    local Library = {
-        name = NewText(settings.NameColor, settings.Size, settings.Transparency),
-        distance = NewText(settings.DistanceColor, settings.DistanceSize, settings.Transparency),
-        tracer = NewLine(settings.BoxColor, settings.LineThickness),
-        boxTL1 = NewBox(settings.BoxColor, settings.LineThickness),
-        boxTL2 = NewBox(settings.BoxColor, settings.LineThickness),
-        boxTR1 = NewBox(settings.BoxColor, settings.LineThickness),
-        boxTR2 = NewBox(settings.BoxColor, settings.LineThickness),
-        boxBL1 = NewBox(settings.BoxColor, settings.LineThickness),
-        boxBL2 = NewBox(settings.BoxColor, settings.LineThickness),
-        boxBR1 = NewBox(settings.BoxColor, settings.LineThickness),
-        boxBR2 = NewBox(settings.BoxColor, settings.LineThickness)
-    }
-
-    local function Updater()
-        local c
-        c = game:GetService("RunService").RenderStepped:Connect(function()
-            if plr.Character ~= nil and plr.Character:FindFirstChild("Humanoid") ~= nil and plr.Character:FindFirstChild("HumanoidRootPart") ~= nil and plr.Character.Humanoid.Health > 0 then
-                local Hum = plr.Character
-                local HumPos, vis = Camera:WorldToViewportPoint(Hum.HumanoidRootPart.Position)
-                if vis then
-                    Library.name.Visible = true
-                    Library.name.Text = plr.Name
-                    Library.name.Position = Vector2.new(HumPos.X, HumPos.Y - 15)
-
-                    local distance = (Camera.CFrame.Position - Hum.HumanoidRootPart.Position).Magnitude
-                    Library.distance.Visible = true
-                    Library.distance.Text = string.format("%.0f studs", distance)
-                    Library.distance.Position = Vector2.new(HumPos.X, HumPos.Y + 15)
-
-                    -- Box calculations
-                    local boxSize = Vector3.new(2, 5, 1)
-                    local TL = Camera:WorldToViewportPoint(Hum.HumanoidRootPart.Position + Vector3.new(-boxSize.X, boxSize.Y, 0))
-                    local TR = Camera:WorldToViewportPoint(Hum.HumanoidRootPart.Position + Vector3.new(boxSize.X, boxSize.Y, 0))
-                    local BL = Camera:WorldToViewportPoint(Hum.HumanoidRootPart.Position + Vector3.new(-boxSize.X, -boxSize.Y, 0))
-                    local BR = Camera:WorldToViewportPoint(Hum.HumanoidRootPart.Position + Vector3.new(boxSize.X, -boxSize.Y, 0))
-
-                    Library.boxTL1.From = Vector2.new(TL.X, TL.Y)
-                    Library.boxTL1.To = Vector2.new(TL.X, TL.Y)
-                    Library.boxTL2.From = Vector2.new(TL.X, TL.Y)
-                    Library.boxTL2.To = Vector2.new(TL.X + boxSize.X, TL.Y)
-
-                    Library.boxTR1.From = Vector2.new(TR.X, TR.Y)
-                    Library.boxTR1.To = Vector2.new(TR.X, TR.Y + boxSize.Y)
-                    Library.boxTR2.From = Vector2.new(TR.X, TR.Y)
-                    Library.boxTR2.To = Vector2.new(TR.X - boxSize.X, TR.Y)
-
-                    Library.boxBL1.From = Vector2.new(BL.X, BL.Y)
-                    Library.boxBL1.To = Vector2.new(BL.X, BL.Y)
-                    Library.boxBL2.From = Vector2.new(BL.X, BL.Y)
-                    Library.boxBL2.To = Vector2.new(BL.X + boxSize.X, BL.Y)
-
-                    Library.boxBR1.From = Vector2.new(BR.X, BR.Y)
-                    Library.boxBR1.To = Vector2.new(BR.X, BR.Y + boxSize.Y)
-                    Library.boxBR2.From = Vector2.new(BR.X, BR.Y)
-                    Library.boxBR2.To = Vector2.new(BR.X - boxSize.X, BR.Y)
-
-                    -- Tracer
-                    DrawTracer(plr, Library.tracer)
-                else
-                    Library.name.Visible = false
-                    Library.distance.Visible = false
-                end
-            else
-                for _, v in pairs(Library) do
-                    v.Visible = false
-                end
-                if game:GetService("Players"):FindFirstChild(plr.Name) == nil then
-                    c:Disconnect()
-                end
-            end
-        end)
-    end
-
-    coroutine.wrap(Updater)()
-end
-
--- Main loop for existing players and new players
-for i, v in pairs(game:GetService("Players"):GetPlayers()) do
-    if v.Name ~= Player.Name then
-        coroutine.wrap(HandleESP)(v)
-        coroutine.wrap(DrawBones)(v)
-    end
-end
-
-game:GetService("Players").PlayerAdded:Connect(function(newplr)
-    coroutine.wrap(HandleESP)(newplr)
-    coroutine.wrap(DrawBones)(newplr)
+-- Apply ESP to new players joining
+players.PlayerAdded:Connect(function(player)
+    wait(1)
+    createESP(player)
 end)
