@@ -76,12 +76,14 @@ local function createESP(player)
                     local headPos = camera:WorldToViewportPoint(head.Position)
                     local torsoPos = camera:WorldToViewportPoint(torso.Position)
 
-                    -- Box ESP with constant size regardless of distance/angle
-                    local distance = (camera.CFrame.Position - rootPart.Position).Magnitude
-                    local constantSize = 1000 / distance -- Base size scalar
-                    local boxWidth = constantSize * 1.0 -- Increased width (from 0.8 to 1.0)
-                    local boxHeight = constantSize * 2.0 -- Increased height (from 1.7 to 2.0)
-                    local boxPosition = Vector2.new(torsoPos.X - boxWidth / 2, torsoPos.Y - boxHeight / 2 + 20) -- Moved down (from +10 to +20)
+                    -- Box ESP spanning from feet to head and wide enough to fit the player
+                    local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position) -- Using LowerTorso as "feet"
+                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) -- Height from head to lower torso
+                    local boxWidth = boxHeight * 0.6 -- Width proportional to height (adjust 0.6 as needed)
+                    local boxPosition = Vector2.new(
+                        torsoPos.X - boxWidth / 2,  -- Center horizontally on torso
+                        lowerTorsoPos.Y             -- Start at the feet (lower torso)
+                    )
 
                     esp.box.Size = Vector2.new(boxWidth, boxHeight)
                     esp.box.Position = boxPosition
