@@ -8,55 +8,27 @@ local function createESP(player)
     
     local esp = {}
 
-    -- Box ESP
-    esp.box = Drawing.new("Square")
-    esp.box.Color = Color3.fromRGB(0, 255, 255) -- Cyan box
-    esp.box.Thickness = 1
-    esp.box.Filled = false
-    esp.box.Visible = false
+    -- 2D Box ESP
+    esp.box2D = Drawing.new("Square")
+    esp.box2D.Color = Color3.fromRGB(255, 255, 255) -- White box
+    esp.box2D.Thickness = 1
+    esp.box2D.Filled = false
+    esp.box2D.Visible = false
     
     -- Name
     esp.name = Drawing.new("Text")
     esp.name.Size = 18
-    esp.name.Color = Color3.fromRGB(255, 255, 255)
+    esp.name.Color = Color3.fromRGB(255, 255, 255) -- White text
     esp.name.Outline = true
     esp.name.Visible = false
 
-    -- Distance
-    esp.distance = Drawing.new("Text")
-    esp.distance.Size = 16
-    esp.distance.Color = Color3.fromRGB(255, 255, 255)
-    esp.distance.Outline = true
-    esp.distance.Visible = false
-
-    -- Health bar (Increased size)
+    -- Health bar
     esp.healthBar = Drawing.new("Line")
-    esp.healthBar.Thickness = 12 -- Increased from 8 to 12
+    esp.healthBar.Thickness = 8
     esp.healthBar.Visible = false
 
-    -- Tracer line
-    esp.tracer = Drawing.new("Line")
-    esp.tracer.Color = Color3.fromRGB(0, 255, 0)
-    esp.tracer.Thickness = 1
-    esp.tracer.Visible = false
-
-    -- Skeleton/Bone ESP
-    local bones = {
-        "Head", "UpperTorso", "LowerTorso",
-        "LeftUpperArm", "LeftLowerArm", "LeftHand",
-        "RightUpperArm", "RightLowerArm", "RightHand",
-        "LeftUpperLeg", "LeftLowerLeg", "LeftFoot",
-        "RightUpperLeg", "RightLowerLeg", "RightFoot"
-    }
-
-    esp.skeleton = {}
-    for i = 1, #bones do
-        local line = Drawing.new("Line")
-        line.Color = Color3.fromRGB(255, 165, 0) -- Orange
-        line.Thickness = 2
-        line.Visible = false
-        esp.skeleton[bones[i]] = line
-    end
+    -- 3D Box ESP
+    esp.box3D = nil -- We'll calculate 3D box position later
 
     -- Function to update ESP
     local function updateESP()
@@ -69,14 +41,12 @@ local function createESP(player)
                 local head = player.Character:FindFirstChild("Head")
                 local torso = player.Character:FindFirstChild("UpperTorso")
                 local leg = player.Character:FindFirstChild("LowerTorso")
-                local leftArm = player.Character:FindFirstChild("LeftUpperArm")
-                local rightArm = player.Character:FindFirstChild("RightUpperArm")
 
-                if head and torso and leg and leftArm and rightArm then
+                if head and torso and leg then
                     local headPos = camera:WorldToViewportPoint(head.Position)
                     local torsoPos = camera:WorldToViewportPoint(torso.Position)
 
-                    -- Box ESP spanning from feet to head, made taller and wider
+                    -- 2D Box ESP
                     local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position) -- Using LowerTorso as "feet"
                     local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) * 2.0 -- Increased height by 100% (taller)
                     local boxWidth = boxHeight * 1.2 -- Increased width to match height proportion (wider)
@@ -85,20 +55,14 @@ local function createESP(player)
                         lowerTorsoPos.Y - (boxHeight * 0.1) -- Start slightly below feet, adjusted for taller height
                     )
 
-                    esp.box.Size = Vector2.new(boxWidth, boxHeight)
-                    esp.box.Position = boxPosition
-                    esp.box.Visible = true
+                    esp.box2D.Size = Vector2.new(boxWidth, boxHeight)
+                    esp.box2D.Position = boxPosition
+                    esp.box2D.Visible = true
 
                     -- Name
                     esp.name.Position = Vector2.new(vector.X, vector.Y - 60)
                     esp.name.Text = player.Name
                     esp.name.Visible = true
-
-                    -- Distance
-                    local playerDistance = (localPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                    esp.distance.Position = Vector2.new(vector.X, vector.Y - 40)
-                    esp.distance.Text = tostring(math.floor(playerDistance)) .. "m"
-                    esp.distance.Visible = true
 
                     -- Health bar (Increased size and adjusted position)
                     if humanoid then
@@ -109,59 +73,67 @@ local function createESP(player)
                         esp.healthBar.Visible = true
                     end
 
-                    -- Tracer line (360 degrees to target)
-                    local targetPosition = rootPart.Position
-                    esp.tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
-                    esp.tracer.To = Vector2.new(vector.X, vector.Y + 50)
-                    esp.tracer.Visible = true
+                    -- 3D Box ESP (Simple 3D Box Representation)
+                    local function draw3DBox()
+                        -- Define vertices (Corners of the box)
+                        local size = Vector3.new(boxWidth, boxHeight, boxWidth)
+                        local offset = rootPart.Position - Vector3.new(0, size.Y / 2, 0)
 
-                    -- Skeleton/Bone ESP
-                    local function drawBone(from, to)
-                        if player.Character:FindFirstChild(from) and player.Character:FindFirstChild(to) then
-                            local fromPos = camera:WorldToViewportPoint(player.Character[from].Position)
-                            local toPos = camera:WorldToViewportPoint(player.Character[to].Position)
-                            esp.skeleton[from].From = Vector2.new(fromPos.X, fromPos.Y)
-                            esp.skeleton[from].To = Vector2.new(toPos.X, toPos.Y)
-                            esp.skeleton[from].Visible = true
-                        else
-                            esp.skeleton[from].Visible = false
+                        -- Calculate corners of the 3D box
+                        local frontTopLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, size.Y/2, size.Z/2))
+                        local frontTopRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, size.Y/2, size.Z/2))
+                        local frontBottomLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, -size.Y/2, size.Z/2))
+                        local frontBottomRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, -size.Y/2, size.Z/2))
+                        local backTopLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, size.Y/2, -size.Z/2))
+                        local backTopRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, size.Y/2, -size.Z/2))
+                        local backBottomLeft = camera:WorldToViewportPoint(offset + Vector3.new(-size.X/2, -size.Y/2, -size.Z/2))
+                        local backBottomRight = camera:WorldToViewportPoint(offset + Vector3.new(size.X/2, -size.Y/2, -size.Z/2))
+
+                        -- Draw lines connecting corners to form the box
+                        local function drawLine(fromPos, toPos)
+                            local line = Drawing.new("Line")
+                            line.Color = Color3.fromRGB(255, 255, 255)
+                            line.Thickness = 2
+                            line.From = fromPos
+                            line.To = toPos
+                            line.Visible = true
+                            return line
                         end
+
+                        -- Draw front and back faces of the 3D box
+                        local frontLines = {
+                            drawLine(frontTopLeft, frontTopRight),
+                            drawLine(frontTopRight, frontBottomRight),
+                            drawLine(frontBottomRight, frontBottomLeft),
+                            drawLine(frontBottomLeft, frontTopLeft)
+                        }
+
+                        local backLines = {
+                            drawLine(backTopLeft, backTopRight),
+                            drawLine(backTopRight, backBottomRight),
+                            drawLine(backBottomRight, backBottomLeft),
+                            drawLine(backBottomLeft, backTopLeft)
+                        }
+
+                        -- Connect front to back
+                        drawLine(frontTopLeft, backTopLeft)
+                        drawLine(frontTopRight, backTopRight)
+                        drawLine(frontBottomLeft, backBottomLeft)
+                        drawLine(frontBottomRight, backBottomRight)
                     end
 
-                    drawBone("Head", "UpperTorso")
-                    drawBone("UpperTorso", "LowerTorso")
-                    drawBone("UpperTorso", "LeftUpperArm")
-                    drawBone("LeftUpperArm", "LeftLowerArm")
-                    drawBone("LeftLowerArm", "LeftHand")
-                    drawBone("UpperTorso", "RightUpperArm")
-                    drawBone("RightUpperArm", "RightLowerArm")
-                    drawBone("RightLowerArm", "RightHand")
-                    drawBone("LowerTorso", "LeftUpperLeg")
-                    drawBone("LeftUpperLeg", "LeftLowerLeg")
-                    drawBone("LeftLowerLeg", "LeftFoot")
-                    drawBone("LowerTorso", "RightUpperLeg")
-                    drawBone("RightUpperLeg", "RightLowerLeg")
-                    drawBone("RightLowerLeg", "RightFoot")
+                    draw3DBox()
+
                 end
             else
-                esp.box.Visible = false
+                esp.box2D.Visible = false
                 esp.name.Visible = false
-                esp.distance.Visible = false
                 esp.healthBar.Visible = false
-                esp.tracer.Visible = false
-                for _, bone in pairs(esp.skeleton) do
-                    bone.Visible = false
-                end
             end
         else
-            esp.box.Visible = false
+            esp.box2D.Visible = false
             esp.name.Visible = false
-            esp.distance.Visible = false
             esp.healthBar.Visible = false
-            esp.tracer.Visible = false
-            for _, bone in pairs(esp.skeleton) do
-                bone.Visible = false
-            end
         end
     end
 
