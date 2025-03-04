@@ -67,30 +67,29 @@ local function createESP(player)
             
             if onScreen then
                 local head = player.Character:FindFirstChild("Head")
-                local torso = player.Character:FindFirstChild("UpperTorso")
-                local leg = player.Character:FindFirstChild("LowerTorso")
+                local feet = player.Character:FindFirstChild("RightFoot") or player.Character:FindFirstChild("LeftFoot")
                 
-                if head and torso and leg then
+                if head and feet then
                     local headPos = camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
-                    local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position - Vector3.new(0, 0.5, 0))
+                    local feetPos = camera:WorldToViewportPoint(feet.Position - Vector3.new(0, 0.5, 0))
 
                     -- Calculate box size and position
-                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y)
+                    local boxHeight = math.abs(headPos.Y - feetPos.Y)
                     local boxWidth = boxHeight * 0.6
-                    local boxPosition = Vector2.new(vector.X - boxWidth / 2, vector.Y - boxHeight / 2)
+                    local boxPosition = Vector2.new(vector.X - boxWidth / 2, feetPos.Y)
 
                     esp.box.Size = Vector2.new(boxWidth, boxHeight)
                     esp.box.Position = boxPosition
                     esp.box.Visible = true
 
                     -- Name
-                    esp.name.Position = Vector2.new(vector.X, vector.Y - (boxHeight / 2) - 20)
+                    esp.name.Position = Vector2.new(vector.X, feetPos.Y - 20)
                     esp.name.Text = player.Name
                     esp.name.Visible = true
 
                     -- Distance
                     local playerDistance = (localPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                    esp.distance.Position = Vector2.new(vector.X, vector.Y - (boxHeight / 2) - 5)
+                    esp.distance.Position = Vector2.new(vector.X, feetPos.Y - 5)
                     esp.distance.Text = tostring(math.floor(playerDistance)) .. "m"
                     esp.distance.Visible = true
 
@@ -107,34 +106,6 @@ local function createESP(player)
                     esp.tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
                     esp.tracer.To = Vector2.new(vector.X, vector.Y + 50)
                     esp.tracer.Visible = true
-
-                    -- Skeleton ESP
-                    local function drawBone(from, to)
-                        if player.Character:FindFirstChild(from) and player.Character:FindFirstChild(to) then
-                            local fromPos = camera:WorldToViewportPoint(player.Character[from].Position)
-                            local toPos = camera:WorldToViewportPoint(player.Character[to].Position)
-                            esp.skeleton[from].From = Vector2.new(fromPos.X, fromPos.Y)
-                            esp.skeleton[from].To = Vector2.new(toPos.X, toPos.Y)
-                            esp.skeleton[from].Visible = true
-                        else
-                            esp.skeleton[from].Visible = false
-                        end
-                    end
-
-                    drawBone("Head", "UpperTorso")
-                    drawBone("UpperTorso", "LowerTorso")
-                    drawBone("UpperTorso", "LeftUpperArm")
-                    drawBone("LeftUpperArm", "LeftLowerArm")
-                    drawBone("LeftLowerArm", "LeftHand")
-                    drawBone("UpperTorso", "RightUpperArm")
-                    drawBone("RightUpperArm", "RightLowerArm")
-                    drawBone("RightLowerArm", "RightHand")
-                    drawBone("LowerTorso", "LeftUpperLeg")
-                    drawBone("LeftUpperLeg", "LeftLowerLeg")
-                    drawBone("LeftLowerLeg", "LeftFoot")
-                    drawBone("LowerTorso", "RightUpperLeg")
-                    drawBone("RightUpperLeg", "RightLowerLeg")
-                    drawBone("RightLowerLeg", "RightFoot")
                 end
             else
                 esp.box.Visible = false
@@ -142,9 +113,6 @@ local function createESP(player)
                 esp.distance.Visible = false
                 esp.healthBar.Visible = false
                 esp.tracer.Visible = false
-                for _, bone in pairs(esp.skeleton) do
-                    bone.Visible = false
-                end
             end
         end
     end
