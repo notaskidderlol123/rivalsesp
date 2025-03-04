@@ -40,6 +40,25 @@ local function DrawESP(plr)
     tracer.Thickness = 1
     tracer.Visible = false
 
+    -- Bone ESP
+    local bones = {
+        "Head", "UpperTorso", "LowerTorso",
+        "LeftUpperArm", "LeftLowerArm", "LeftHand",
+        "RightUpperArm", "RightLowerArm", "RightHand",
+        "LeftUpperLeg", "LeftLowerLeg", "LeftFoot",
+        "RightUpperLeg", "RightLowerLeg", "RightFoot"
+    }
+
+    local skeleton = {}
+    for _, bone in pairs(bones) do
+        local line = Drawing.new("Line")
+        line.Color = Color3.fromRGB(255, 165, 0) -- Skeleton color (Orange)
+        line.Thickness = 2
+        line.Visible = false
+        skeleton[bone] = line
+    end
+
+    -- Function to update ESP and Bone ESP
     local function Update()
         local c
         c = runService.RenderStepped:Connect(function()
@@ -131,12 +150,39 @@ local function DrawESP(plr)
                         tracer.From = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y)
                         tracer.To = Vector2.new(Right.X, Right.Y)
                         tracer.Visible = true
+
+                        -- Update Bone ESP
+                        local function getBonePosition(boneName)
+                            local bonePart = plr.Character:FindFirstChild(boneName)
+                            if bonePart then
+                                return camera:WorldToViewportPoint(bonePart.Position)
+                            end
+                        end
+
+                        -- Connect bones with lines
+                        if getBonePosition("Head") and getBonePosition("UpperTorso") then
+                            skeleton["Head"].From = getBonePosition("Head")
+                            skeleton["Head"].To = getBonePosition("UpperTorso")
+                            skeleton["Head"].Visible = true
+                        end
+
+                        -- Example of bone connections (continue for the rest of the bones)
+                        if getBonePosition("UpperTorso") and getBonePosition("LowerTorso") then
+                            skeleton["UpperTorso"].From = getBonePosition("UpperTorso")
+                            skeleton["UpperTorso"].To = getBonePosition("LowerTorso")
+                            skeleton["UpperTorso"].Visible = true
+                        end
+
+                        -- You can continue adding bone connections for arms, legs, and feet
                     else 
                         Box.Visible = false
                         name.Visible = false
                         distance.Visible = false
                         healthBar.Visible = false
                         tracer.Visible = false
+                        for _, line in pairs(skeleton) do
+                            line.Visible = false
+                        end
                     end
                 else 
                     Box.Visible = false
@@ -144,6 +190,9 @@ local function DrawESP(plr)
                     distance.Visible = false
                     healthBar.Visible = false
                     tracer.Visible = false
+                    for _, line in pairs(skeleton) do
+                        line.Visible = false
+                    end
                 end
             else
                 Box.Visible = false
@@ -151,6 +200,9 @@ local function DrawESP(plr)
                 distance.Visible = false
                 healthBar.Visible = false
                 tracer.Visible = false
+                for _, line in pairs(skeleton) do
+                    line.Visible = false
+                end
                 if game.Players:FindFirstChild(plr.Name) == nil then
                     c:Disconnect()
                 end
