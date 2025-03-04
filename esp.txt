@@ -8,9 +8,9 @@ local function createESP(player)
     
     local esp = {}
 
-    -- Box ESP (3D)
+    -- Box ESP
     esp.box = Drawing.new("Square")
-    esp.box.Color = Color3.fromRGB(255, 255, 255) -- White box
+    esp.box.Color = Color3.fromRGB(255, 255, 255)
     esp.box.Thickness = 1
     esp.box.Filled = false
     esp.box.Visible = false
@@ -31,7 +31,7 @@ local function createESP(player)
 
     -- Health bar
     esp.healthBar = Drawing.new("Line")
-    esp.healthBar.Thickness = 12 -- Adjusted thickness
+    esp.healthBar.Thickness = 3
     esp.healthBar.Visible = false
 
     -- Tracer line
@@ -40,7 +40,7 @@ local function createESP(player)
     esp.tracer.Thickness = 1
     esp.tracer.Visible = false
 
-    -- Skeleton/Bone ESP
+    -- Skeleton ESP
     local bones = {
         "Head", "UpperTorso", "LowerTorso",
         "LeftUpperArm", "LeftLowerArm", "LeftHand",
@@ -50,12 +50,12 @@ local function createESP(player)
     }
 
     esp.skeleton = {}
-    for i = 1, #bones do
+    for _, bone in pairs(bones) do
         local line = Drawing.new("Line")
-        line.Color = Color3.fromRGB(255, 165, 0) -- Orange
+        line.Color = Color3.fromRGB(255, 165, 0)
         line.Thickness = 2
         line.Visible = false
-        esp.skeleton[bones[i]] = line
+        esp.skeleton[bone] = line
     end
 
     -- Function to update ESP
@@ -69,43 +69,37 @@ local function createESP(player)
                 local head = player.Character:FindFirstChild("Head")
                 local torso = player.Character:FindFirstChild("UpperTorso")
                 local leg = player.Character:FindFirstChild("LowerTorso")
-                local leftArm = player.Character:FindFirstChild("LeftUpperArm")
-                local rightArm = player.Character:FindFirstChild("RightUpperArm")
+                
+                if head and torso and leg then
+                    local headPos = camera:WorldToViewportPoint(head.Position + Vector3.new(0, 0.5, 0))
+                    local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position - Vector3.new(0, 0.5, 0))
 
-                if head and torso and leg and leftArm and rightArm then
-                    local headPos = camera:WorldToViewportPoint(head.Position)
-                    local torsoPos = camera:WorldToViewportPoint(torso.Position)
-
-                    -- Box ESP spanning from feet to head, made taller and wider
-                    local lowerTorsoPos = camera:WorldToViewportPoint(leg.Position) -- Using LowerTorso as "feet"
-                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y) * 2.0 -- Increased height by 100% (taller)
-                    local boxWidth = boxHeight * 1.2 -- Increased width to match height proportion (wider)
-                    local boxPosition = Vector2.new(
-                        torsoPos.X - boxWidth / 2,  -- Center horizontally on torso
-                        lowerTorsoPos.Y - (boxHeight * 0.1) -- Start slightly below feet, adjusted for taller height
-                    )
+                    -- Calculate box size and position
+                    local boxHeight = math.abs(headPos.Y - lowerTorsoPos.Y)
+                    local boxWidth = boxHeight * 0.6
+                    local boxPosition = Vector2.new(vector.X - boxWidth / 2, vector.Y - boxHeight / 2)
 
                     esp.box.Size = Vector2.new(boxWidth, boxHeight)
                     esp.box.Position = boxPosition
                     esp.box.Visible = true
 
                     -- Name
-                    esp.name.Position = Vector2.new(vector.X, vector.Y - 60)
+                    esp.name.Position = Vector2.new(vector.X, vector.Y - (boxHeight / 2) - 20)
                     esp.name.Text = player.Name
                     esp.name.Visible = true
 
                     -- Distance
                     local playerDistance = (localPlayer.Character.HumanoidRootPart.Position - rootPart.Position).Magnitude
-                    esp.distance.Position = Vector2.new(vector.X, vector.Y - 40)
+                    esp.distance.Position = Vector2.new(vector.X, vector.Y - (boxHeight / 2) - 5)
                     esp.distance.Text = tostring(math.floor(playerDistance)) .. "m"
                     esp.distance.Visible = true
 
                     -- Health bar
                     if humanoid then
                         local healthPercent = humanoid.Health / humanoid.MaxHealth
-                        esp.healthBar.From = Vector2.new(boxPosition.X - 12, boxPosition.Y + boxHeight) -- Shifted further left
-                        esp.healthBar.To = Vector2.new(boxPosition.X - 12, boxPosition.Y + boxHeight * (1 - healthPercent))
-                        esp.healthBar.Color = Color3.fromRGB(0, 255, 0) -- Green for health
+                        esp.healthBar.From = Vector2.new(boxPosition.X - 6, boxPosition.Y + boxHeight)
+                        esp.healthBar.To = Vector2.new(boxPosition.X - 6, boxPosition.Y + boxHeight * (1 - healthPercent))
+                        esp.healthBar.Color = Color3.fromRGB(0, 255, 0)
                         esp.healthBar.Visible = true
                     end
 
@@ -114,7 +108,7 @@ local function createESP(player)
                     esp.tracer.To = Vector2.new(vector.X, vector.Y + 50)
                     esp.tracer.Visible = true
 
-                    -- Skeleton/Bone ESP
+                    -- Skeleton ESP
                     local function drawBone(from, to)
                         if player.Character:FindFirstChild(from) and player.Character:FindFirstChild(to) then
                             local fromPos = camera:WorldToViewportPoint(player.Character[from].Position)
@@ -152,22 +146,13 @@ local function createESP(player)
                     bone.Visible = false
                 end
             end
-        else
-            esp.box.Visible = false
-            esp.name.Visible = false
-            esp.distance.Visible = false
-            esp.healthBar.Visible = false
-            esp.tracer.Visible = false
-            for _, bone in pairs(esp.skeleton) do
-                bone.Visible = false
-            end
         end
     end
 
     runService.RenderStepped:Connect(updateESP)
 end
 
--- Add ESP to all players
+-- Apply ESP to all players
 for _, player in pairs(players:GetPlayers()) do
     if player ~= localPlayer then
         createESP(player)
